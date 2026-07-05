@@ -1,4 +1,20 @@
 /* 主应用 - 创建Vue实例并挂载，管理全局状态 */
+
+/* 图片预加载 - 首次打开即缓存所有图标，避免页面切换时延迟 */
+const preloadImages = () => {
+  const icons = {
+    menu: ['bcsz', 'fw', 'qjpb', 'sbcz', 'szd', 'tsgj', 'xtgl', 'xxcx'],
+    search: ['dxp', 'dyzt', 'lsjl', 'qjxx', 'xtgk', 'zjxx', 'zxp']
+  }
+  Object.entries(icons).forEach(([folder, names]) => {
+    names.forEach(name => {
+      const img = new Image()
+      img.src = `icon/${folder}/${name}.png`
+    })
+  })
+}
+preloadImages()
+
 const app = Vue.createApp({
   components: { HomePage },
   setup() {
