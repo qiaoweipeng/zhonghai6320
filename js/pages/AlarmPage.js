@@ -26,20 +26,20 @@ const AlarmPage = {
         <div class="flex-1 overflow-auto">
           <table class="w-full text-[18px] text-left border-collapse">
             <tbody>
-              <tr v-for="(item, index) in alarmList" :key="index" class="border-b border-gray-300">
-                <td class="py-[6px] px-[10px]">{{ item.type }}</td>
-                <td class="py-[6px] px-[10px]">{{ item.time }}</td>
+              <tr v-for="(item, index) in alarmList" :key="index" class="border-b border-gray-300 h-[58px]">
+                <td class="w-[140px] px-[10px]">{{ item.type }}</td>
+                <td class="px-[10px]">{{ item.time }}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- 右侧按钮区域：5个深蓝色矩形，桃红色字体 -->
-        <div class="flex flex-col gap-[8px] p-[10px] shrink-0">
+        <!-- 右侧按钮区域：5个深蓝色矩形，桃红色字体，上下边距窄，中间均分 -->
+        <div class="flex flex-col justify-between px-[10px] py-[4px] shrink-0 h-full">
           <div
             v-for="(btn, index) in btns"
             :key="index"
-            class="w-[100px] h-[40px] bg-blue-900 flex items-center justify-center cursor-pointer text-[16px] font-bold"
+            class="w-[100px] h-[40px] rounded-md bg-blue-900 flex items-center justify-center cursor-default text-[16px] font-bold"
             style="color: #FF69B4;"
           >{{ btn }}</div>
         </div>

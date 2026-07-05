@@ -12,7 +12,7 @@ const SmallBtn = {
       const gainNode = audioContext.createGain()
       oscillator.connect(gainNode)
       gainNode.connect(audioContext.destination)
-      oscillator.frequency.value = 1200
+      oscillator.frequency.value = 1400
       oscillator.type = 'sine'
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
