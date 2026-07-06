@@ -1,13 +1,16 @@
 /* 警情页面组件 - 覆盖屏幕蓝色区域，分上中下三部分，中间分左右 */
 const AlarmPage = {
+  props: {
+    selectedIndex: { type: Number, default: 0 }
+  },
   setup() {
-    /* 表格数据：类型 + 时间 */
+    /* 表格数据：类型+序号、时间、器件信息 */
     const alarmList = Vue.ref([
-      { type: '火警', time: '14:23:05' },
-      { type: '联动', time: '14:22:58' },
-      { type: '器件故障', time: '14:20:12' },
-      { type: '其他故障', time: '14:15:30' },
-      { type: '屏蔽', time: '14:10:00' }
+      { type: '火警', cur: 1, total: 1, time: '2026年7月6日 17:45', device: '02-01-013 手动报警按钮' },
+      { type: '联动', cur: 1, total: 2, time: '2026年7月6日 17:30', device: '02-03-005 输出模块' },
+      { type: '器件故障', cur: 1, total: 1, time: '2026年7月6日 16:20', device: '03-01-008 感烟探测器' },
+      { type: '其他故障', cur: 1, total: 1, time: '2026年7月6日 15:10', device: '05-02-003 总线隔离器' },
+      { type: '屏蔽', cur: 1, total: 1, time: '2026年7月6日 14:05', device: '01-01-001 手动报警按钮' }
     ])
 
     /* 右侧按钮列表 */
@@ -22,19 +25,30 @@ const AlarmPage = {
 
       <!-- 中间内容区域：分左右 -->
       <div class="flex-1 flex overflow-hidden">
-        <!-- 左侧表格：无表头，两列（类型+时间） -->
+        <!-- 左侧表格 -->
         <div class="flex-1 overflow-auto">
-          <table class="w-full text-[18px] text-left border-collapse">
+          <table class="w-full text-[21px] text-left border-collapse">
             <tbody>
-              <tr v-for="(item, index) in alarmList" :key="index" class="border-b border-gray-300 h-[58px]">
-                <td class="w-[140px] px-[10px]">{{ item.type }}</td>
-                <td class="px-[10px]">{{ item.time }}</td>
+              <tr
+                v-for="(item, index) in alarmList"
+                :key="index"
+                class="border-b border-gray-500 h-[70px]"
+                :style="index === selectedIndex ? 'background-color: #f8edea;' : ''"
+              >
+                <td class="w-[140px] px-[10px] align-middle border-r border-gray-300 text-center">
+                  <div class="font-bold">{{ item.type }}</div>
+                  <div class="text-[17px] text-gray-600">{{ item.cur }}/{{ item.total }}</div>
+                </td>
+                <td class="px-[10px] align-middle">
+                  <div>{{ item.time }}</div>
+                  <div>{{ item.device }}</div>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- 右侧按钮区域：5个深蓝色矩形，桃红色字体，上下边距窄，中间均分 -->
+        <!-- 右侧按钮区域 -->
         <div class="flex flex-col justify-between px-[10px] py-[4px] shrink-0 h-full">
           <div
             v-for="(btn, index) in btns"

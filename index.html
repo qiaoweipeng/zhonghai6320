@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>众海6320-消防报警控制器仿真</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="js/vue-demi.iife.min.js"></script>
+    <script src="js/pinia.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       html, body {
@@ -28,6 +30,7 @@
     <div id="app"></div>
     <!-- 组件按依赖顺序加载：基础组件在前，复合组件在后 -->
     <script src="js/audio.js"></script>
+    <script src="js/stores/lightStore.js"></script>
     <script src="js/components/LightItem.js"></script>
     <script src="js/components/SmallBtn.js"></script>
     <script src="js/components/ScreenBtn.js"></script>

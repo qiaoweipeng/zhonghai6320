@@ -1,13 +1,16 @@
 /* 首页组件 - 整合屏幕、指示灯、小按钮和红色装饰线条 */
 const HomePage = {
   components: { Screen, LightItem, SmallBtn, ExamComponent },
-  props: ['lights', 'isAutoMode'],
-  emits: ['toggle-auto'],
-  setup(props, { emit }) {
-    const isSilenceOn = Vue.ref(true)
+  setup() {
+    const store = lightStore()
+    const { isAutoMode, isSilenceOn, lights } = Pinia.storeToRefs(store)
     const currentPage = Vue.ref('alarm')
     const menuSelectedIndex = Vue.ref(0)
     const searchSelectedIndex = Vue.ref(0)
+    const alarmSelectedIndex = Vue.ref(0)
+
+    /* 弹窗控制 */
+    const showConfirmModal = Vue.ref(false)
 
     /* 器件信息页面状态：0=分区, 1=回路, 2=地址编号 */
     const deviceActiveField = Vue.ref(0)
@@ -73,14 +76,17 @@ const HomePage = {
       }
     })
 
-    /* 计算指示灯状态：自动和消音灯根据状态切换颜色 */
-    const currentLights = Vue.computed(() => {
-      return props.lights.map(light => {
-        if (light.name === '自动') return { ...light, color: props.isAutoMode ? 'red' : 'gray' }
-        if (light.name === '消音') return { ...light, color: isSilenceOn.value ? 'red' : 'gray' }
-        return light
-      })
-    })
+    /* 获取灯的颜色 */
+    const getLightColor = (name) => {
+      if (name === '自动') return isAutoMode.value ? '#dc2626' : '#9ca3af'
+      if (name === '消音') return isSilenceOn.value ? '#dc2626' : '#9ca3af'
+      const light = lights.value.find(l => l.name === name)
+      if (light) {
+        const colors = { red: '#dc2626', yellow: '#facc15', green: '#22c55e', gray: '#9ca3af' }
+        return colors[light.color] || colors.gray
+      }
+      return '#9ca3af'
+    }
 
     /* 小按钮标签列表 */
     const smallBtns = ['复位', '声光', '1', '2ABC', '3DEF', '自检', '取消', '4GHI', '5JKL', '6MNO', '确认', '▲', '7PQRS', '8TUV', '9WXYZ', '◀', '▼', '▶', '0', '消音']
@@ -120,6 +126,17 @@ const HomePage = {
       } else if (direction === '▲' && deviceActiveField.value > 0) {
         deviceActiveField.value--
         lastInputTime = 0
+      }
+    }
+
+    /* 警情页面：箭头上下切换高亮行 */
+    const moveAlarmSelection = (direction) => {
+      if (currentPage.value !== 'alarm') return
+      const total = 5
+      if (direction === '▼' && alarmSelectedIndex.value < total - 1) {
+        alarmSelectedIndex.value++
+      } else if (direction === '▲' && alarmSelectedIndex.value > 0) {
+        alarmSelectedIndex.value--
       }
     }
 
@@ -184,13 +201,24 @@ const HomePage = {
 
     /* 点击消音按钮切换状态 */
     const handleBtnClick = (label) => {
-      if (label === '消音') isSilenceOn.value = !isSilenceOn.value
+      if (showConfirmModal.value) {
+        if (label === '确认') {
+          showConfirmModal.value = false
+          store.toggleAutoMode()
+          return
+        } else if (label === '取消') {
+          showConfirmModal.value = false
+          return
+        }
+      }
+      if (label === '消音') store.toggleSilence()
+      if (label === '确认') handleConfirm()
       if (['▲', '▼', '◀', '▶'].includes(label)) {
         moveMenuSelection(label)
         moveSearchSelection(label)
         moveDeviceField(label)
+        moveAlarmSelection(label)
       }
-      if (label === '确认') handleConfirm()
       const digit = extractDigit(label)
       if (digit !== null) handleDigitKey(digit)
     }
@@ -202,15 +230,21 @@ const HomePage = {
 
     /* 屏幕右侧按钮点击处理：第5个(索引4)为退出/返回键 */
     const handleScreenBtnClick = (index) => {
-      if (index === 4) {
-        if (currentPage.value === 'device') {
-          currentPage.value = 'search'
-        } else if (currentPage.value === 'search') {
-          currentPage.value = 'menu'
-        } else if (currentPage.value === 'menu') {
-          currentPage.value = 'alarm'
-        } else if (currentPage.value === 'alarm') {
-          currentPage.value = 'menu'
+      if (index === 1) {
+        showConfirmModal.value = true
+      } else if (index === 4) {
+        if (showConfirmModal.value) {
+          showConfirmModal.value = false
+        } else {
+          if (currentPage.value === 'device') {
+            currentPage.value = 'search'
+          } else if (currentPage.value === 'search') {
+            currentPage.value = 'menu'
+          } else if (currentPage.value === 'menu') {
+            currentPage.value = 'alarm'
+          } else if (currentPage.value === 'alarm') {
+            currentPage.value = 'menu'
+          }
         }
       }
     }
@@ -233,22 +267,30 @@ const HomePage = {
       currentPage.value = 'alarm'
     }
 
-    return { currentLights, smallBtns, handleBtnClick, handleNavigate, handleScreenBtnClick, currentPage, menuSelectedIndex, searchSelectedIndex, deviceActiveField, zoneValue, loopValue, addrValue, deviceBars, examZoneData, handleReturnAlarm }
+    return { lights, getLightColor, smallBtns, handleBtnClick, handleNavigate, handleScreenBtnClick, currentPage, menuSelectedIndex, searchSelectedIndex, alarmSelectedIndex, deviceActiveField, zoneValue, loopValue, addrValue, deviceBars, examZoneData, handleReturnAlarm, showConfirmModal }
   },
   template: `
     <div
       class="w-[1750px] h-[720px] flex relative border-gray-500 bg-[#b6b6b6] rounded-[25px] p-[30px]"
       style="box-shadow: 0 4px 16px rgba(0,0,0,0.3);"
     >
-      <Screen :page="currentPage" :menu-selected-index="menuSelectedIndex" :search-selected-index="searchSelectedIndex" :device-active-field="deviceActiveField" :zone-value="zoneValue" :loop-value="loopValue" :addr-value="addrValue" :device-bars="deviceBars" @navigate="handleNavigate" @screen-btn-click="handleScreenBtnClick" />
+      <Screen :page="currentPage" :menu-selected-index="menuSelectedIndex" :search-selected-index="searchSelectedIndex" :alarm-selected-index="alarmSelectedIndex" :device-active-field="deviceActiveField" :zone-value="zoneValue" :loop-value="loopValue" :addr-value="addrValue" :device-bars="deviceBars" :show-confirm-modal="showConfirmModal" @navigate="handleNavigate" @screen-btn-click="handleScreenBtnClick" @close-modal="showConfirmModal = false" />
       <div class="w-[35%] h-full flex flex-col justify-start">
         <div class="grid grid-cols-5 gap-[5px] mb-[75px]">
-          <LightItem
-            v-for="(light, index) in currentLights"
-            :key="index"
-            :name="light.name"
-            :color="light.color"
-          />
+          <div
+            v-for="(light, index) in lights"
+            :key="light.name"
+            class="flex flex-col items-center justify-center"
+            :style="{ visibility: light.name ? 'visible' : 'hidden' }"
+          >
+            <div class="text-[16px] text-center">{{ light.name }}</div>
+            <div
+              class="w-[40px] h-[20px] border border-black mb-1"
+              :style="{
+                backgroundColor: getLightColor(light.name)
+              }"
+            ></div>
+          </div>
         </div>
         <div class="grid grid-cols-5 grid-rows-4 gap-[40px] pl-[35px]">
           <SmallBtn
